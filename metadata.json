@@ -1,0 +1,6 @@
+{
+  "name": "ReplyFloat AI",
+  "description": "AI-powered floating reply assistant for Android with transparent overlay, accessibility context analysis, multi-provider AI engine, and pass-through touch mode.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
