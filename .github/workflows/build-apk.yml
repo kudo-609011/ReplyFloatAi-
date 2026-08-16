@@ -1,10 +1,9 @@
-name: Build Debug APK
+name: Build ReplyFloatAI APK
 
 on:
-  push:
-    branches:
-      - ai
   workflow_dispatch:
+  push:
+    branches: [main]
 
 jobs:
   build:
@@ -14,30 +13,39 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
+      - name: Set up Java 17
+        uses: actions/setup-java@v5
         with:
+          distribution: temurin
           java-version: '17'
-          distribution: 'temurin'
 
-      - name: Make gradlew executable
-        run: chmod +x gradlew
-
-      - name: Build Debug APK with Gradle
-        run: ./gradlew :app:assembleDebug --stacktrace --no-daemon
-
-      - name: Verify APK exists under app/build/outputs/apk/debug/
+      - name: Extract Android project
         run: |
-          if [ ! -f app/build/outputs/apk/debug/app-debug.apk ] && [ -z "$(ls -A app/build/outputs/apk/debug/*.apk 2>/dev/null)" ]; then
-            echo "Error: Debug APK not found in app/build/outputs/apk/debug/"
-            exit 1
-          fi
-          echo "Verified debug APK exists:"
-          ls -lh app/build/outputs/apk/debug/*.apk
+          rm -rf android-build
+          mkdir android-build
+          unzip -q ReplyFloatAI_GitHub_ready.zip -d android-build
 
-      - name: Upload Debug APK Artifact
+          echo "Extracted files:"
+          find android-build -maxdepth 2 -type f | sort | head -100
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+
+      - name: Build Debug APK
+        working-directory: android-build
+        run: |
+          gradle :app:assembleDebug --stacktrace --no-daemon
+
+      - name: Verify APK
+        run: |
+          test -f android-build/app/build/outputs/apk/debug/app-debug.apk
+          ls -lh android-build/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
           name: ReplyFloatAI-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: android-build/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
